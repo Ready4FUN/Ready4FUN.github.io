@@ -42,9 +42,19 @@
 			}
 		);
 
+		//графический интерфейс
 		var ui = H.ui.UI.createDefault(map, maptypes, 'ru-RU');
 
+		var mapSettings = ui.getControl('mapsettings');
+		var zoom = ui.getControl('zoom');
+		var scalebar = ui.getControl('scalebar');
+		var panorama = ui.getControl('panorama');
 
+		panorama.setAlignment('top-left');
+		mapSettings.setAlignment('top-left');
+		zoom.setAlignment('top-left');
+		scalebar.setAlignment('top-left');
+		//конец UI
 
 		var geocodingParams = [
 			{searchText: 'Россия, Москва,ул. Лиственничная аллея, д. 18'},
