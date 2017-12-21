@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Интерактивная карта</title>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, width=device-width" />
+
+	<script src="http://js.api.here.com/v3/3.0/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
+	<script src="http://js.api.here.com/v3/3.0/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
+	<script src="http://js.api.here.com/v3/3.0/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
+	<script src="http://js.api.here.com/v3/3.0/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
+    
+    <link rel="stylesheet" type="text/css" href="http://js.api.here.com/v3/3.0/mapsjs-ui.css" />
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+<body>
+
+	<div id = "mapContainer">
+		
+	</div>
+
+	<script type="text/javascript">
+
+		//подключение к серваку
+		var platform = new H.service.Platform({
+			'app_id': '91B99P5sDeoc7pybhoej',
+			'app_code': 'IhNycL0zQ7SEIAAmWPnCAg'
+		});
+
+		var targetElement = document.getElementById('mapContainer');
+		//нужная хурма
+		var maptypes = platform.createDefaultLayers();
+
+		//создание карты 
+		var map = new H.Map(
+			document.getElementById('mapContainer'),
+			maptypes.normal.map,
+			{
+				zoom: 10,
+				center: { lat: 55.752856, lng: 37.622317}
+			}
+		);
+
+
+		var geocodingParams = [
+			{searchText: 'Россия, Москва,ул. Лиственничная аллея, д. 18'},
+			{searchText: 'Россия, Москва, ул. Прянишников, д. 19'}
+		];
+			
+
+		var icon = new H.map.Icon('https://png.icons8.com/nolan/40/000000/ruble.png');
+		
+		var onResult = function(result) {
+			var locations = result.Response.View[0].Result,
+				position,
+				marker;
+
+			for(i = 0; i < locations.length; i++){
+				position = {
+					lat: locations[i].Location.DisplayPosition.Latitude,
+					lng: locations[i].Location.DisplayPosition.Longitude
+				};
+				marker = new H.map.Marker(position, {icon:icon});
+				map.addObject(marker);
+
+				marker.addEventListener('pointerenter', function(evt) {
+					if(map.getZoom() > 11){
+						alert("lat = " + position.lat + "\n" + "lng = " + position.lng);
+					} else {
+						alert("FUCKING ZOOM IT")
+					};
+				});
+
+			}
+
+		};
+
+		var geocoder = platform.getGeocodingService();
+		for(i = 0; i < geocodingParams.length; i++){
+			geocoder.geocode(geocodingParams[i], onResult, function(e) {
+				alert(e);
+			});
+		};
+
+
+		//подключаем событие для карты 
+		var mapEvents = new H.mapevents.MapEvents(map);
+
+		//стандартыне события карты 
+		var behavior = new H.mapevents.Behavior(mapEvents);
+
+
+	</script>
+</body>
+</html>
