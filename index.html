@@ -86,15 +86,19 @@
 
 				marker.addEventListener('pointerenter', function(evt) {
 					if(map.getZoom() > 11){
-						//alert("lat = " + position.lat + "\n" + "lng = " + position.lng);
 						bubble.open();
 					} else {
 						alert("FUCKING ZOOM IT")
-					};
+					}
+				});
+
+				marker.addEventListener('pointerleave', function(evt) {
+					if(bubble.getState() == 'open'){
+						bubble.close();
+					}
 				});
 
 			}
-
 		};
 
 		var geocoder = platform.getGeocodingService();
