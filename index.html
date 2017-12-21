@@ -10,6 +10,8 @@
 	<script src="http://js.api.here.com/v3/3.0/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
 	<script src="http://js.api.here.com/v3/3.0/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
 	<script src="http://js.api.here.com/v3/3.0/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
+
+	<script scr="JS/json.js" type="text/javascript" charset="utf-8"></script>
     
     <link rel="stylesheet" type="text/css" href="http://js.api.here.com/v3/3.0/mapsjs-ui.css" />
 	<link rel="stylesheet" type="text/css" href="css/main.css">
@@ -21,6 +23,23 @@
 	</div>
 
 	<script type="text/javascript">
+		//вынести в отдельный файл, сделать кеширование и оптимизацию
+		function getData(ready){
+			var request = new XMLHttpRequest();
+
+			request.open('GET', 'http://www.budget.gov.ru/epbs/registry/iku/data', true);
+
+			request.onreadystatechange = function(){
+				if(this.readyState == 4 && this.status !=404) {
+					ready(this.responseText);
+				}
+			}
+			request.send();
+		}
+
+
+		var jsonBox;
+
 
 		//подключение к серваку
 		var platform = new H.service.Platform({
@@ -37,8 +56,8 @@
 			document.getElementById('mapContainer'),
 			maptypes.normal.map,
 			{
-				zoom: 10,
-				center: { lat: 55.752856, lng: 37.622317}
+				zoom: 4,
+				center: { lat: 61.698653, lng: 99.505405}
 			}
 		);
 
@@ -55,11 +74,8 @@
 		scalebar.setAlignment('top-right');
 		//конец UI
 
-		var geocodingParams = [
-			{searchText: 'Россия, Москва,ул. Лиственничная аллея, д. 18'},
-			{searchText: 'Россия, Москва, ул. Прянишников, д. 19'}
-		];
-			
+
+
 
 		var icon = new H.map.Icon('https://png.icons8.com/nolan/40/000000/ruble.png');
 		
@@ -104,11 +120,32 @@
 		};
 
 		var geocoder = platform.getGeocodingService();
-		for(i = 0; i < geocodingParams.length; i++){
-			geocoder.geocode(geocodingParams[i], onResult, function(e) {
-				alert(e);
-			});
-		};
+
+
+		var geocodingParams = [
+			//{searchText: '103132, г. Москва, Ипатьевский переулок, д. 12, стр.1'},
+			//{searchText: '450076, Республика Башкортостан, г.Уфа, ул.Гоголя, 62'}
+		];
+
+		getData(function(jsonData){
+			jsonBox = JSON.parse(jsonData);
+			//генерация массива с нужными данными.
+			
+			for(i = 0; i < jsonBox.data.length; i++){
+				geocodingParams.push({searchText: jsonBox.data[i].address});
+			};
+
+
+
+			for(i = 0; i < geocodingParams.length; i++){
+				geocoder.geocode(geocodingParams[i], onResult, function(e) {
+					alert(e);
+				});
+			};	
+		});
+
+
+
 
 
 		//подключаем событие для карты 
