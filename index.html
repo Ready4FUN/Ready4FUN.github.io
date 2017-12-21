@@ -42,6 +42,9 @@
 			}
 		);
 
+		var ui = H.ui.UI.createDefault(map, maptypes, 'ru-RU');
+
+
 
 		var geocodingParams = [
 			{searchText: 'Россия, Москва,ул. Лиственничная аллея, д. 18'},
@@ -64,9 +67,18 @@
 				marker = new H.map.Marker(position, {icon:icon});
 				map.addObject(marker);
 
+				var bubble = new H.ui.InfoBubble(position, {
+					content: "lat = " + position.lat + "\n" + "lng = " + position.lng
+				});
+
+				ui.addBubble(bubble);
+
+				bubble.close();
+
 				marker.addEventListener('pointerenter', function(evt) {
 					if(map.getZoom() > 11){
-						alert("lat = " + position.lat + "\n" + "lng = " + position.lng);
+						//alert("lat = " + position.lat + "\n" + "lng = " + position.lng);
+						bubble.open();
 					} else {
 						alert("FUCKING ZOOM IT")
 					};
@@ -89,7 +101,6 @@
 
 		//стандартыне события карты 
 		var behavior = new H.mapevents.Behavior(mapEvents);
-
 
 	</script>
 </body>
