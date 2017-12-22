@@ -26,8 +26,8 @@
 		//вынести в отдельный файл, сделать кеширование и оптимизацию
 		function getData(ready){
 			var request = new XMLHttpRequest();
-
-			request.open('GET', 'http://www.budget.gov.ru/epbs/registry/iku/data', true);
+			//http://www.budget.gov.ru/epbs/registry/iku/data
+			request.open('GET', 'kontakty_i_otv_lica.json', true);
 
 			request.onreadystatechange = function(){
 				if(this.readyState == 4 && this.status !=404) {
@@ -131,8 +131,8 @@
 			jsonBox = JSON.parse(jsonData);
 			//генерация массива с нужными данными.
 			
-			for(i = 0; i < jsonBox.data.length; i++){
-				geocodingParams.push({searchText: jsonBox.data[i].address});
+			for(i = 0; i < jsonBox.length; i++){
+				geocodingParams.push({searchText: jsonBox[i]["Почтовые адреса территориальных органов Федерального казначейства: Наименование адреса"]});
 			};
 
 
@@ -141,7 +141,8 @@
 				geocoder.geocode(geocodingParams[i], onResult, function(e) {
 					alert(e);
 				});
-			};	
+			};
+			
 		});
 
 
