@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>DigitalCulture</title>
+
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, width=device-width" />
+
+	<script src="http://js.api.here.com/v3/3.0/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
+	<script src="http://js.api.here.com/v3/3.0/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
+	<script src="http://js.api.here.com/v3/3.0/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
+	<script src="http://js.api.here.com/v3/3.0/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
+    
+    <link rel="stylesheet" type="text/css" href="http://js.api.here.com/v3/3.0/mapsjs-ui.css" />
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+
+</head>
+<body>
+<div id = "mapContainer"></div>
+
+
+<script type="text/javascript">
+	//parse Json
+	function getData(ready){
+		var request = new XMLHttpRequest();
+
+		request.open('GET', 'http://opendata.mkrf.ru/v1/archeology_list/$?l=10', true);
+		request.onreadystatechange = function(){
+			if(this.readyState == 4 && this.status !=404) {
+				ready(this.responseText);
+			}
+		}
+		request.send();
+	}
+
+	//connect here api
+	var platform = new H.service.Platform({
+		'app_id': '91B99P5sDeoc7pybhoej',
+		'app_code': 'IhNycL0zQ7SEIAAmWPnCAg'
+	});	
+
+	//var for layers
+	var maptypes = platform.createDefaultLayers();
+
+	//greated map
+	var map = new H.Map(
+		document.getElementById('mapContainer'),
+		maptypes.normal.map,
+		{
+			zoom: 4,
+			center: { lat: 61.698653, lng: 99.505405}
+		}
+	);
+
+
+
+	//ui
+	var ui = H.ui.UI.createDefault(map, maptypes, 'ru-RU');
+		var mapSettings = ui.getControl('mapsettings');
+		var zoom = ui.getControl('zoom');
+		var scalebar = ui.getControl('scalebar');
+		
+		
+		mapSettings.setAlignment('top-right');
+		zoom.setAlignment('middle-right');
+		scalebar.setAlignment('top-right');
+	//end ui
+	
+	//great event for map
+	var mapEvents = new H.mapevents.MapEvents(map);
+	//standart event for map
+	var behavior = new H.mapevents.Behavior(mapEvents);
+
+
+	//add adres to map
+	//function to add marker on map
+	var onResult = function(result) {
+		var locations = result.Response.View[0].Result,
+			position,
+			marker;
+		for(i = 0; i < locations.length; i++){
+			position = {
+				lat: locations[i].Location.DisplayPosition.Latitude,
+				lng: locations[i].Location.DisplayPosition.Longitude
+			};
+			marker = new H.map.Marker(position, {icon:icon});
+			map.addObject(marker);
+		}
+	};
+
+	//json container
+	var jsonBox;
+
+	//
+	getData(function(jsonData){
+			jsonBox = JSON.parse(jsonData, '');
+			
+	});
+
+
+</script>
+</body>
+</html>
