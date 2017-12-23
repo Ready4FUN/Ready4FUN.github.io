@@ -24,7 +24,7 @@
 	function getData(ready){
 		var request = new XMLHttpRequest();
 
-		request.open('GET', 'http://opendata.mkrf.ru/v1/archeology_list/$?l=10', true);
+		request.open('GET', 'JSON/museum.json', true);
 		request.onreadystatechange = function(){
 			if(this.readyState == 4 && this.status !=404) {
 				ready(this.responseText);
@@ -74,6 +74,7 @@
 
 	//add adres to map
 	//function to add marker on map
+	/*
 	var onResult = function(result) {
 		var locations = result.Response.View[0].Result,
 			position,
@@ -87,16 +88,23 @@
 			map.addObject(marker);
 		}
 	};
+	*/
 
 	//json container
 	var jsonBox;
 
-	//
 	getData(function(jsonData){
-			jsonBox = JSON.parse(jsonData, '');
-			
-	});
+		jsonBox = JSON.parse(jsonData, '');
+		
+		var icon = new H.map.Icon('https://png.icons8.com/ios/50/333333/museum.png');
 
+		for(i = 0; i < jsonBox.length; i++){
+			marker = new H.map.Marker({
+				lat: jsonBox[i].data.general.address.mapPosition.coordinates[0],
+				lng: jsonBox[i].data.general.address.mapPosition.coordinates[1]}, {icon:icon});
+			map.addObject(marker);
+		};
+	});
 
 </script>
 </body>
