@@ -21,8 +21,7 @@
 <div id = "mapContainer"></div>
 
 <div class="setAdress">
-	<input type="text" value="GO" >
-	<input type="submit" value="Submit" onclick="alert('click')">
+	<input id="changeArea" type="checkbox">
 </div>
 <script type="text/javascript">
 	//parse Json
@@ -56,33 +55,25 @@
 			center: { lat: 55.753215, lng: 37.622504}
 		}
 	);
-	var parrot = 0.9
-	var rectCenter = { lat: 50.384949, lng: 37.152148};
-
-	var customStyle = {
-  		strokeColor: 'black',
-		fillColor: 'rgba(255, 255, 255, 0)',
-		lineWidth: 1,
-		lineCap: 'square',
-		lineJoin: 'bevel'
-	};
-
-	var rect = new H.map.Rect(new H.geo.Rect(rectCenter.lat + parrot/2, rectCenter.lng - parrot, rectCenter.lat - parrot/2, rectCenter.lng + parrot), { style: customStyle });
-
-	map.addObject(rect);
-	map.setViewBounds(rect.getBounds());
 
 
 	//ui
 	var ui = H.ui.UI.createDefault(map, maptypes, 'ru-RU');
-		var mapSettings = ui.getControl('mapsettings');
-		var zoom = ui.getControl('zoom');
-		var scalebar = ui.getControl('scalebar');
+	var mapSettings = ui.getControl('mapsettings');
+	var zoom = ui.getControl('zoom');
+	var scalebar = ui.getControl('scalebar');
 		
 		
-		mapSettings.setAlignment('top-right');
-		zoom.setAlignment('middle-right');
+	mapSettings.setAlignment('top-right');
+	zoom.setAlignment('middle-right');
 		scalebar.setAlignment('top-right');
+		//greate buble
+	var bubble = new H.ui.InfoBubble({lat: 0,lng: 0}, {
+		content: ""
+	});
+
+	ui.addBubble(bubble);
+	bubble.close();
 	//end ui
 	
 	//great event for map
@@ -90,60 +81,109 @@
 	//standart event for map
 	var behavior = new H.mapevents.Behavior(mapEvents);
 
+	//evet to add area 
+	map.addEventListener('tap', function(evt){
+		if(!document.getElementById("changeArea").checked){
+			return;
+		}
+		// debugger;
+		if(window.layer){
+			map.removeLayer(window.layer);
+		};
+		
+		dataPoints = [];
 
+		map.removeObjects(map.getObjects());
+
+		var coord = map.screenToGeo(evt.currentPointer.viewportX,
+            evt.currentPointer.viewportY);
+
+		var parrot = 0.05
+		var rectCenter = { lat: coord.lat, lng: coord.lng};
+
+		var customStyle = {
+	  		strokeColor: 'black',
+			fillColor: 'rgba(255, 255, 255, 0)',
+			lineWidth: 1,
+			lineCap: 'square',
+			lineJoin: 'bevel'
+		};
+
+		var rect = new H.map.Rect(new H.geo.Rect(rectCenter.lat + parrot/2, rectCenter.lng - parrot, rectCenter.lat - parrot/2, rectCenter.lng + parrot), { style: customStyle });
+
+		map.addObject(rect);
+		map.setViewBounds(rect.getBounds());
+
+		getData(function(jsonData){
+			jsonBox = JSON.parse(jsonData, '');
+			
+			var icon = new H.map.Icon('https://png.icons8.com/ios/50/333333/museum.png');
+
+			var j = 0;
+			for(i = 0; i < jsonBox.length; i++){
+				// debugger;
+				if((jsonBox[i].data.general.address.mapPosition.coordinates[0] <= rectCenter.lat + parrot/2) &&(jsonBox[i].data.general.address.mapPosition.coordinates[0] >= rectCenter.lat - parrot/2) && (jsonBox[i].data.general.address.mapPosition.coordinates[1] >= rectCenter.lng - parrot) && (jsonBox[i].data.general.address.mapPosition.coordinates[1] <= rectCenter.lng + parrot)){
+					
+					marker = new H.map.Marker({
+						lat: jsonBox[i].data.general.address.mapPosition.coordinates[0],
+						lng: jsonBox[i].data.general.address.mapPosition.coordinates[1]}); 
+					
+					marker.setData(jsonBox[i].data.general);
+
+					dataPoints.push(new H.clustering.DataPoint(marker.getGeometry().lat, marker.getGeometry().lng));
+
+					dataPoints[j].data = jsonBox[i].data.general;
+
+
+					j++;
+
+					
+
+				};
+
+
+
+				//map.addObject(marker);
+				//debugger;
+				
+			};
+
+			//50.599476, 36.580036 belgorod
+			//debugger;
+
+			var clusteredDataProvider = new H.clustering.Provider(dataPoints);
+
+			// Create a layer that includes the data provider and its data points: 
+			window.layer = new H.map.layer.ObjectLayer(clusteredDataProvider);
+
+			clusteredDataProvider.addEventListener('tap',function(obj){
+				/*
+				console.log(obj.target.getPosition())
+
+				
+				rectCenter.lng + parrot/2, rectCenter.lat - parrot, rectCenter.lng - parrot/2, rectCenter.lat + parrot
+				
+				console.log((obj.target.getPosition().lat <= rectCenter.lat + parrot/2) &&(obj.target.getPosition().lat >= rectCenter.lat - parrot/2) && (obj.target.getPosition().lng >= rectCenter.lng - parrot) && (obj.target.getPosition().lng <= rectCenter.lng + parrot));
+
+				*/
+				//debugger;
+				console.log(obj.target.getData().a.data.name);
+				bubble.setPosition(obj.target.getPosition());
+				bubble.setContent(obj.target.getData().a.data.name);
+				bubble.open();
+				//debugger;
+			});
+
+			// Add the layer to the map:
+			//debugger
+			map.addLayer(layer);
+
+		});
+	// debugger;
+	});
 	//json container
 	var jsonBox;
 	var dataPoints = [];
-
-	getData(function(jsonData){
-		jsonBox = JSON.parse(jsonData, '');
-		
-		var icon = new H.map.Icon('https://png.icons8.com/ios/50/333333/museum.png');
-
-
-		for(i = 0; i < jsonBox.length; i++){
-			// debugger;
-			
-			
-			if((jsonBox[i].data.general.address.mapPosition.coordinates[0] <= rectCenter.lat + parrot/2) &&(jsonBox[i].data.general.address.mapPosition.coordinates[0] >= rectCenter.lat - parrot/2) && (jsonBox[i].data.general.address.mapPosition.coordinates[1] >= rectCenter.lng - parrot) && (jsonBox[i].data.general.address.mapPosition.coordinates[1] <= rectCenter.lng + parrot)){
-			marker = new H.map.Marker({
-				lat: jsonBox[i].data.general.address.mapPosition.coordinates[0],
-				lng: jsonBox[i].data.general.address.mapPosition.coordinates[1]}); 
-			
-			dataPoints.push(new H.clustering.DataPoint(marker.getGeometry().lat, marker.getGeometry().lng));
-			}
-
-			//map.addObject(marker);
-			//debugger;
-			
-		};
-
-		//50.599476, 36.580036 belgorod
-		//debugger;
-
-		var clusteredDataProvider = new H.clustering.Provider(dataPoints);
-
-		// Create a layer that includes the data provider and its data points: 
-		var layer = new H.map.layer.ObjectLayer(clusteredDataProvider);
-
-		clusteredDataProvider.addEventListener('tap',function(obj){
-			console.log(obj.target.getPosition())
-
-			/*
-			rectCenter.lng + parrot/2, rectCenter.lat - parrot, rectCenter.lng - parrot/2, rectCenter.lat + parrot
-			*/
-			console.log((obj.target.getPosition().lat <= rectCenter.lat + parrot/2) &&(obj.target.getPosition().lat >= rectCenter.lat - parrot/2) && (obj.target.getPosition().lng >= rectCenter.lng - parrot) && (obj.target.getPosition().lng <= rectCenter.lng + parrot));
-
-			
-			//debugger;
-		});
-
-		// Add the layer to the map:
-		map.addLayer(layer);
-
-
-	});
-
 </script>
 </body>
 </html>
