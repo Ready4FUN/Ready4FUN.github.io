@@ -20,7 +20,10 @@
 <body>
 <div id = "mapContainer"></div>
 
-
+<div class="setAdress">
+	<input type="text" value="GO" >
+	<input type="submit" value="Submit" onclick="alert('click')">
+</div>
 <script type="text/javascript">
 	//parse Json
 	function getData(ready){
@@ -53,10 +56,22 @@
 			center: { lat: 55.753215, lng: 37.622504}
 		}
 	);
+	var parrot = 0.9
+	var rectCenter = { lat: 50.384949, lng: 37.152148};
 
+	var customStyle = {
+  		strokeColor: 'black',
+		fillColor: 'rgba(255, 255, 255, 0)',
+		lineWidth: 1,
+		lineCap: 'square',
+		lineJoin: 'bevel'
+	};
 
-	var circle = new H.map.Circle({ lat: 55.753215, lng: 37.622504}, 8000);
-	map.addObject(circle);
+	var rect = new H.map.Rect(new H.geo.Rect(rectCenter.lat + parrot/2, rectCenter.lng - parrot, rectCenter.lat - parrot/2, rectCenter.lng + parrot), { style: customStyle });
+
+	map.addObject(rect);
+	map.setViewBounds(rect.getBounds());
+
 
 	//ui
 	var ui = H.ui.UI.createDefault(map, maptypes, 'ru-RU');
@@ -76,24 +91,6 @@
 	var behavior = new H.mapevents.Behavior(mapEvents);
 
 
-	//add adres to map
-	//function to add marker on map
-	/*
-	var onResult = function(result) {
-		var locations = result.Response.View[0].Result,
-			position,
-			marker;
-		for(i = 0; i < locations.length; i++){
-			position = {
-				lat: locations[i].Location.DisplayPosition.Latitude,
-				lng: locations[i].Location.DisplayPosition.Longitude
-			};
-			marker = new H.map.Marker(position, {icon:icon});
-			map.addObject(marker);
-		}
-	};
-	*/
-
 	//json container
 	var jsonBox;
 	var dataPoints = [];
@@ -106,18 +103,22 @@
 
 		for(i = 0; i < jsonBox.length; i++){
 			// debugger;
+			
+			
+			if((jsonBox[i].data.general.address.mapPosition.coordinates[0] <= rectCenter.lat + parrot/2) &&(jsonBox[i].data.general.address.mapPosition.coordinates[0] >= rectCenter.lat - parrot/2) && (jsonBox[i].data.general.address.mapPosition.coordinates[1] >= rectCenter.lng - parrot) && (jsonBox[i].data.general.address.mapPosition.coordinates[1] <= rectCenter.lng + parrot)){
 			marker = new H.map.Marker({
 				lat: jsonBox[i].data.general.address.mapPosition.coordinates[0],
 				lng: jsonBox[i].data.general.address.mapPosition.coordinates[1]}); 
 			
 			dataPoints.push(new H.clustering.DataPoint(marker.getGeometry().lat, marker.getGeometry().lng));
-			
+			}
 
 			//map.addObject(marker);
 			//debugger;
 			
 		};
 
+		//50.599476, 36.580036 belgorod
 		//debugger;
 
 		var clusteredDataProvider = new H.clustering.Provider(dataPoints);
@@ -127,8 +128,13 @@
 
 		clusteredDataProvider.addEventListener('tap',function(obj){
 			console.log(obj.target.getPosition())
+
+			/*
+			rectCenter.lng + parrot/2, rectCenter.lat - parrot, rectCenter.lng - parrot/2, rectCenter.lat + parrot
+			*/
+			console.log((obj.target.getPosition().lat <= rectCenter.lat + parrot/2) &&(obj.target.getPosition().lat >= rectCenter.lat - parrot/2) && (obj.target.getPosition().lng >= rectCenter.lng - parrot) && (obj.target.getPosition().lng <= rectCenter.lng + parrot));
+
 			
-			console.log((Math.pow((obj.target.getPosition().lat - circle.getCenter().lat),2) + Math.pow((obj.target.getPosition().lng - circle.getCenter().lng),2)) <= Math.pow(8,2));
 			//debugger;
 		});
 

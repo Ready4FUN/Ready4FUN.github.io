@@ -10,3 +10,10 @@ body{
 	width: 100%;
 	height: 100vh;
 }
+
+.setAdress{
+	position: absolute;
+	display: block;
+	top: 5px;
+	left: 10px;
+}
