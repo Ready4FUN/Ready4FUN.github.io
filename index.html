@@ -10,6 +10,8 @@
 	<script src="http://js.api.here.com/v3/3.0/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
 	<script src="http://js.api.here.com/v3/3.0/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
 	<script src="http://js.api.here.com/v3/3.0/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
+	<script src="http://js.api.here.com/v3/3.0/mapsjs-clustering.js"
+   type="text/javascript" charset="utf-8"></script>
     
     <link rel="stylesheet" type="text/css" href="http://js.api.here.com/v3/3.0/mapsjs-ui.css" />
 	<link rel="stylesheet" type="text/css" href="CSS/main.css">
@@ -47,12 +49,14 @@
 		document.getElementById('mapContainer'),
 		maptypes.normal.map,
 		{
-			zoom: 4,
-			center: { lat: 61.698653, lng: 99.505405}
+			zoom: 10,
+			center: { lat: 55.753215, lng: 37.622504}
 		}
 	);
 
 
+	var circle = new H.map.Circle({ lat: 55.753215, lng: 37.622504}, 8000);
+	map.addObject(circle);
 
 	//ui
 	var ui = H.ui.UI.createDefault(map, maptypes, 'ru-RU');
@@ -92,18 +96,46 @@
 
 	//json container
 	var jsonBox;
+	var dataPoints = [];
 
 	getData(function(jsonData){
 		jsonBox = JSON.parse(jsonData, '');
 		
 		var icon = new H.map.Icon('https://png.icons8.com/ios/50/333333/museum.png');
 
+
 		for(i = 0; i < jsonBox.length; i++){
+			// debugger;
 			marker = new H.map.Marker({
 				lat: jsonBox[i].data.general.address.mapPosition.coordinates[0],
-				lng: jsonBox[i].data.general.address.mapPosition.coordinates[1]}, {icon:icon});
-			map.addObject(marker);
+				lng: jsonBox[i].data.general.address.mapPosition.coordinates[1]}); 
+			
+			dataPoints.push(new H.clustering.DataPoint(marker.getGeometry().lat, marker.getGeometry().lng));
+			
+
+			//map.addObject(marker);
+			//debugger;
+			
 		};
+
+		//debugger;
+
+		var clusteredDataProvider = new H.clustering.Provider(dataPoints);
+
+		// Create a layer that includes the data provider and its data points: 
+		var layer = new H.map.layer.ObjectLayer(clusteredDataProvider);
+
+		clusteredDataProvider.addEventListener('tap',function(obj){
+			console.log(obj.target.getPosition())
+			
+			console.log((Math.pow((obj.target.getPosition().lat - circle.getCenter().lat),2) + Math.pow((obj.target.getPosition().lng - circle.getCenter().lng),2)) <= Math.pow(8,2));
+			//debugger;
+		});
+
+		// Add the layer to the map:
+		map.addLayer(layer);
+
+
 	});
 
 </script>
