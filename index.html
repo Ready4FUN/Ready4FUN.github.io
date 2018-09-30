@@ -1,191 +1,36 @@
-<!DOCTYPE html>
 <html>
-<head>
-	<title>DigitalCulture</title>
-
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<meta name="viewport" content="initial-scale=1.0, width=device-width" />
-
-	<script src="http://js.api.here.com/v3/3.0/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
-	<script src="http://js.api.here.com/v3/3.0/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
-	<script src="http://js.api.here.com/v3/3.0/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
-	<script src="http://js.api.here.com/v3/3.0/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
-	<script src="http://js.api.here.com/v3/3.0/mapsjs-clustering.js"
-   type="text/javascript" charset="utf-8"></script>
+  <head>
+    <title>1GA DATA ANALYSIS</title>
+    <meta name="viewport" content="initial-scale=1.0, width=device-width" charset="utf-8" />
+   <script src="http://js.api.here.com/v3/3.0/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
+    <script src="http://js.api.here.com/v3/3.0/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
+    <script src="http://js.api.here.com/v3/3.0/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
+    <script src="http://js.api.here.com/v3/3.0/mapsjs-data.js" type="text/javascript" charset="utf-8"></script>
+    <script src="http://js.api.here.com/v3/3.0/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
     
-    <link rel="stylesheet" type="text/css" href="http://js.api.here.com/v3/3.0/mapsjs-ui.css" />
-	<link rel="stylesheet" type="text/css" href="CSS/main.css">
+     <link rel="stylesheet" type="text/css" href="http://js.api.here.com/v3/3.0/mapsjs-ui.css" />
 
-</head>
-<body>
-<div id = "mapContainer"></div>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,400&amp;subset=cyrillic" rel="stylesheet">   
 
-<div class="setAdress">
-	<input id="changeArea" type="checkbox">
-</div>
-<script type="text/javascript">
-	//parse Json
-	function getData(ready){
-		var request = new XMLHttpRequest();
+    <link rel="stylesheet" type="text/css" href="css/main.css">
+    <link rel="stylesheet" type="text/css" href="css/ui.css">
+    <!--Индивидуальные css -->
+    <style type="text/css">
+      #mapContainer{
+        filter: blur(2px);
+      }
+    </style>
+  </head>
+    <body>
+  
+    <button id="dataAnalysis" onclick="dataAnalysisClick()">DATA ANALYSIS</button>  
+    <button id="logistics" onclick="logisticClick()"> LOGISTICS </button>
 
-		request.open('GET', 'JSON/museum.json', true);
-		request.onreadystatechange = function(){
-			if(this.readyState == 4 && this.status !=404) {
-				ready(this.responseText);
-			}
-		}
-		request.send();
-	}
+    <div  id="mapContainer"></div>
+    
+    
 
-	//connect here api
-	var platform = new H.service.Platform({
-		'app_id': '91B99P5sDeoc7pybhoej',
-		'app_code': 'IhNycL0zQ7SEIAAmWPnCAg'
-	});	
-
-	//var for layers
-	var maptypes = platform.createDefaultLayers();
-
-	//greated map
-	var map = new H.Map(
-		document.getElementById('mapContainer'),
-		maptypes.normal.map,
-		{
-			zoom: 10,
-			center: { lat: 55.753215, lng: 37.622504}
-		}
-	);
-
-
-	//ui
-	var ui = H.ui.UI.createDefault(map, maptypes, 'ru-RU');
-	var mapSettings = ui.getControl('mapsettings');
-	var zoom = ui.getControl('zoom');
-	var scalebar = ui.getControl('scalebar');
-		
-		
-	mapSettings.setAlignment('top-right');
-	zoom.setAlignment('middle-right');
-		scalebar.setAlignment('top-right');
-		//greate buble
-	var bubble = new H.ui.InfoBubble({lat: 0,lng: 0}, {
-		content: ""
-	});
-
-	ui.addBubble(bubble);
-	bubble.close();
-	//end ui
-	
-	//great event for map
-	var mapEvents = new H.mapevents.MapEvents(map);
-	//standart event for map
-	var behavior = new H.mapevents.Behavior(mapEvents);
-
-	//evet to add area 
-	map.addEventListener('tap', function(evt){
-		if(!document.getElementById("changeArea").checked){
-			return;
-		}
-
-		bubble.close();
-		// debugger;
-		if(window.layer){
-			map.removeLayer(window.layer);
-		};
-		
-		dataPoints = [];
-
-		map.removeObjects(map.getObjects());
-
-		var coord = map.screenToGeo(evt.currentPointer.viewportX,
-            evt.currentPointer.viewportY);
-
-		var parrot = 0.05
-		var rectCenter = { lat: coord.lat, lng: coord.lng};
-
-		var customStyle = {
-	  		strokeColor: 'black',
-			fillColor: 'rgba(255, 255, 255, 0)',
-			lineWidth: 1,
-			lineCap: 'square',
-			lineJoin: 'bevel'
-		};
-
-		var rect = new H.map.Rect(new H.geo.Rect(rectCenter.lat + parrot/2, rectCenter.lng - parrot, rectCenter.lat - parrot/2, rectCenter.lng + parrot), { style: customStyle });
-
-		map.addObject(rect);
-		map.setViewBounds(rect.getBounds());
-
-		getData(function(jsonData){
-			jsonBox = JSON.parse(jsonData, '');
-			
-			var icon = new H.map.Icon('https://png.icons8.com/ios/50/333333/museum.png');
-
-			var j = 0;
-			for(i = 0; i < jsonBox.length; i++){
-				// debugger;
-				if((jsonBox[i].data.general.address.mapPosition.coordinates[0] <= rectCenter.lat + parrot/2) &&(jsonBox[i].data.general.address.mapPosition.coordinates[0] >= rectCenter.lat - parrot/2) && (jsonBox[i].data.general.address.mapPosition.coordinates[1] >= rectCenter.lng - parrot) && (jsonBox[i].data.general.address.mapPosition.coordinates[1] <= rectCenter.lng + parrot)){
-					
-					marker = new H.map.Marker({
-						lat: jsonBox[i].data.general.address.mapPosition.coordinates[0],
-						lng: jsonBox[i].data.general.address.mapPosition.coordinates[1]}); 
-					
-					marker.setData(jsonBox[i].data.general);
-
-					dataPoints.push(new H.clustering.DataPoint(marker.getGeometry().lat, marker.getGeometry().lng));
-
-					dataPoints[j].data = jsonBox[i].data.general;
-
-
-					j++;
-
-					
-
-				};
-
-
-
-				//map.addObject(marker);
-				//debugger;
-				
-			};
-
-			//50.599476, 36.580036 belgorod
-			//debugger;
-
-			var clusteredDataProvider = new H.clustering.Provider(dataPoints);
-
-			// Create a layer that includes the data provider and its data points: 
-			window.layer = new H.map.layer.ObjectLayer(clusteredDataProvider);
-
-			clusteredDataProvider.addEventListener('tap',function(obj){
-				/*
-				console.log(obj.target.getPosition())
-
-				
-				rectCenter.lng + parrot/2, rectCenter.lat - parrot, rectCenter.lng - parrot/2, rectCenter.lat + parrot
-				
-				console.log((obj.target.getPosition().lat <= rectCenter.lat + parrot/2) &&(obj.target.getPosition().lat >= rectCenter.lat - parrot/2) && (obj.target.getPosition().lng >= rectCenter.lng - parrot) && (obj.target.getPosition().lng <= rectCenter.lng + parrot));
-
-				*/
-				//debugger;
-				console.log(obj.target.getData().a.data.name);
-				bubble.setPosition(obj.target.getPosition());
-				bubble.setContent(obj.target.getData().a.data.name);
-				bubble.open();
-				//debugger;
-			});
-
-			// Add the layer to the map:
-			//debugger
-			map.addLayer(layer);
-
-		});
-	// debugger;
-	});
-	//json container
-	var jsonBox;
-	var dataPoints = [];
-</script>
-</body>
+    <script src="js/map.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/event_handler.js" type="text/javascript" charset="utf-8"></script>
+  </body>
 </html>
